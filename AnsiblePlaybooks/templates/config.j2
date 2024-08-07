@@ -1,0 +1,9 @@
+# config file
+
+[configuration]
+db_path = {{ configuration.db_path }}
+secret_key = {{ configuration.secret_key }}
+
+[admin]
+groups = {% for group in configuration.admin_group %}{{ group }}{% if not loop.last %}, {% endif %}{% endfor %}
+
