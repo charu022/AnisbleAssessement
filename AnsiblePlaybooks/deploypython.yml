@@ -2,10 +2,10 @@
   hosts: localhost
   connection: local
   become: true 
-  vars:
-    wheel_file_name: "Example-1.1.1-py3-none-any.whl"  
-    wheel_file_path: "/home/ec2-user/AnsibleAssessement/{{ wheel_file_name }}"
-    virtualenv_path: "/opt/example"
+  # vars:
+  #   wheel_file_name: "Example-1.1.1-py3-none-any.whl"  
+  #   wheel_file_path: "/home/ec2-user/AnsibleAssessement/{{ wheel_file_name }}"
+  #   virtualenv_path: "/opt/example"
 
   tasks:
     # Task 1: Install virtualenv if not already present
@@ -16,15 +16,15 @@
 
     # Task 2: Create Python virtual environment
     - name: Create virtual environment
-      command: virtualenv {{ virtualenv_path }}
+      command: virtualenv {{ deployment.location }}
       args:
-        creates: "{{ virtualenv_path }}"
+        creates: "{{ deployment.location }}"
 
     # Task 3: Install Python application from wheel file
     - name: Install Python application from wheel file
       pip:
-        name: "{{ wheel_file_path }}"
-        virtualenv: "{{ virtualenv_path }}"
+        name: "{{ wheel_file.name }}"
+        virtualenv: "{{ deployment.location }}"
         state: present
 
     # Task 4: Optionally, restart application services or perform other necessary tasks
