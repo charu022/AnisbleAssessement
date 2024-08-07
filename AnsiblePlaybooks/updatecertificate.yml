@@ -1,32 +1,37 @@
-- name: Configure CA certificates, install custom CA, and deploy Python application
+- name: Configure CA Certificates on Target Hosts
   hosts: 172.31.63.50
-  become: true  
-
-  vars_files:
-    - vault.yml  
+  become: yes
+  vars:
+    ca_certs:
+      - src: "./../certificates/CA1.crt"
+        dest: "/etc/ssl/certs/CA1.crt"
+      - src: "./../certificates/CA2.crt"
+        dest: "/etc/ssl/certs/CA2.crt"
+      - src: "./../certificates/CA3.crt"
+        dest: "/etc/ssl/certs/CA3.crt"
 
   tasks:
-    # Task 1: Configure standard CA certificates
-    - name: Install standard CA certificates
-      package:
-        name: ca-certificates
-        state: latest
-      tags: 
-        - ca_certificates
-
-    # Task 2: Install custom CA certificates using private key from vault
-    - name: Install custom CA certificates
+    - name: Copy CA certificates to target hosts
       copy:
-        src: CA1.crt  
-        dest: /usr/local/share/ca-certificates/CA1.crt
-      notify: Update CA certificates
-      tags:
-        - custom_ca_certificates
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ ca_certs }}"
+      notify: Update CA Trust
 
-    # Task 3: Notify handler to update CA certificates
+    - name: Verify CA certificates
+      command: "openssl x509 -in {{ item.dest }} -noout -text"
+      loop: "{{ ca_certs }}"
+      register: cert_validation_results
+      failed_when: "'Error' in cert_validation_results.stdout"
+
+    - name: Print CA certificate validation results
+      debug:
+        msg: "{{ item.stdout }}"
+      loop: "{{ cert_validation_results.results }}"
+  
   handlers:
-    - name: Update CA certificates
-      shell: update-ca-certificates
-      async: 45
-      poll: 0
-
+    - name: Update CA Trust
+      command: update-ca-trust

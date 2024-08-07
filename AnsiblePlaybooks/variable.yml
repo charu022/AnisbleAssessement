@@ -1,0 +1,20 @@
+# vars.yml
+application:
+  port: 5000
+
+deployment:
+  location: "/opt/example"  
+
+wheel_file:
+  name: "Example-1.1.1-py3-none-any.whl" 
+
+instance:
+  path: "/opt/example/instance" 
+
+configuration:
+  secret_key: "AVerySafeExampleKey123! "
+  db_path: "postgresql://example_user:myVerySecretDatabasePassword@localhost:5432/example_db"
+  admin_group: 
+	- "Read-write"
+	- "Read-only"
+	- "Super"
