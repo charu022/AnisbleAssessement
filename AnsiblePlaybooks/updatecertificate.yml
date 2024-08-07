@@ -1,0 +1,38 @@
+- name: Configure CA Certificates on Target Hosts
+  hosts: localhost
+  connection: local
+  become: yes
+  vars:
+    ca_certs:
+      - src: "./../certificates/CA1.crt"
+        dest: "/etc/ssl/certs/CA1.crt"
+      - src: "./../certificates/CA2.crt"
+        dest: "/etc/ssl/certs/CA2.crt"
+      - src: "./../certificates/CA3.crt"
+        dest: "/etc/ssl/certs/CA3.crt"
+
+  tasks:
+    - name: Copy CA certificates to target hosts
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ ca_certs }}"
+      notify: Update CA Trust
+
+    - name: Verify CA certificates
+      command: "openssl x509 -in {{ item.dest }} -noout -text"
+      loop: "{{ ca_certs }}"
+      register: cert_validation_results
+      failed_when: "'Error' in cert_validation_results.stdout"
+
+    - name: Print CA certificate validation results
+      debug:
+        msg: "{{ item.stdout }}"
+      loop: "{{ cert_validation_results.results }}"
+  
+  handlers:
+    - name: Update CA Trust
+      command: update-ca-trust
